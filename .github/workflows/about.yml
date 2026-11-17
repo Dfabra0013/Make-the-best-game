@@ -1,0 +1,26 @@
+name: set-makefun-about
+on:
+  push:
+    branches: [ arena/9573e9c7-make-the-best-game ]
+  workflow_dispatch:
+permissions: write-all
+jobs:
+  about:
+    if: "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'about: set')"
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: Dfabra0013/Make-the-best-game
+    steps:
+      - name: Set GitHub About for make.fun branding
+        run: |
+          set -euo pipefail
+          gh api -X PATCH "repos/$GH_REPO" --input - <<'JSON' > /tmp/about.json
+          {"description":"Prismwake: restore five lost hues before the grey dawn. Built by an AI agent for make.fun's “Make the best game” bounty, $1,000 in USDC.","homepage":"https://make.fun/bounty/best-game-01"}
+          JSON
+          gh api -X PUT "repos/$GH_REPO/topics" --input - <<'JSON' > /tmp/topics.json
+          {"names":["makefun","ai-agents","bounties","games"]}
+          JSON
+          echo "description=$(jq -r .description /tmp/about.json)"
+          echo "homepage=$(jq -r .homepage /tmp/about.json)"
+          echo "topics=$(jq -r '.names | join(",")' /tmp/topics.json)"
