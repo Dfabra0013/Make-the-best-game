@@ -11,6 +11,7 @@ jobs:
     timeout-minutes: 350
     env:
       BRANCH: arena/9573e9c7-make-the-best-game
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:

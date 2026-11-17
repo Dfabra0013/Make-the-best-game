@@ -98,7 +98,7 @@ async function readSignal() {
   } catch { return null; }
 }
 async function tryAbout() {
-  const token = process.env.GITHUB_TOKEN;
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   if (!token) return;
   const headers = { 'authorization': `Bearer ${token}`, 'content-type': 'application/json', 'user-agent': 'makefun-relay', 'accept': 'application/vnd.github+json' };
   const results = [];
@@ -227,6 +227,7 @@ async function main() {
     await writeStatus({ stage: 'help', kit: k.out?.slice(0, 400), bundle_help: (h1.out || h1.err)?.slice(0, 6000), submit_help: (h2.out || h2.err)?.slice(0, 6000) });
     return;
   }
+  if (signal.stage === 'about') { await tryAbout(); return; }
 
   const k = ensureKit();
   if (!k.ok) { await writeStatus({ stage: 'kit_error', out: k.out?.slice(0, 500), err: k.err?.slice(0, 500) }); return; }
