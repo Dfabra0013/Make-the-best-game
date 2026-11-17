@@ -190,6 +190,13 @@ function submitCmd(signal) {
 async function main() {
   let s = loadState();
 
+  // One-time marker so the sandbox can confirm the runner picked up this version.
+  if (!s.scriptV2) {
+    s.scriptV2 = true; saveState(s);
+    await writeStatus({ stage: 'script_version', siws: true, wallet: s.keypair?.wallet ?? null });
+    return;
+  }
+
   // Phase 1: create the agent wallet and ask the owner to approve the connection.
   if (!s.keypair) {
     const kp = newKeypair();
