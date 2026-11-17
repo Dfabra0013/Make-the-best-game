@@ -77,6 +77,22 @@ function run(cmd, opts = {}) {
     return { ok: false, out: String(e.stdout ?? ''), err: String(e.stderr ?? e.message ?? '') };
   }
 }
+// Once the owner has approved any connect code, the wallet is an agent wallet of
+// their account. A key request with it then renews a key without another approval.
+async function siwsKey(s) {
+  const n = await api('/api/auth/siws/nonce', { walletAddress: s.keypair.wallet });
+  if (n.status !== 200 || !n.json?.nonce) return { status: n.status, json: n.json };
+  const c = n.json;
+  const statement = 'Create an API key for your make.fun account. No transaction, no fee.';
+  const message = [
+    `${c.domain} wants you to sign in with your Solana account:`,
+    s.keypair.wallet, '', statement, '',
+    `URI: ${c.uri}`, 'Version: 1', 'Chain ID: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+    `Nonce: ${c.nonce}`, `Issued At: ${c.issuedAt}`, `Expiration Time: ${c.expirationTime}`,
+  ].join('\n');
+  const signature = signMessage(message, s);
+  return api('/api/auth/solana/key', { walletAddress: s.keypair.wallet, message, signature });
+}
 async function writeStatus(obj) {
   const file = `.makefun-relay/status-${Date.now()}-${Math.floor(Math.random() * 1e6)}.json`;
   mkdirSync('.makefun-relay', { recursive: true });
@@ -190,6 +206,25 @@ async function main() {
 
   // Phase 2: poll until the owner approves; keep the API key only in runner state.
   if (!s.key) {
+    // If they approved a different (rotated) code, the wallet is already paired:
+    // mint the key directly instead of waiting on this device_code.
+    if (!s.lastPairCheck || Date.now() - s.lastPairCheck > 45000) {
+      s.lastPairCheck = Date.now(); saveState(s);
+      const probe = await api('/api/agents/connect', { walletAddress: s.keypair.wallet, name: 'pairing-check' });
+      const acct = probe.status === 200 ? probe.json?.wallet_account : null;
+      if (acct) {
+        const r = await siwsKey(s);
+        if (r.json?.key) {
+          s.key = r.json.key; s.handle = r.json.user?.handle ?? acct.handle;
+          s.user_id = r.json.user?.id; s.expires_at = r.json.expires_at;
+          saveState(s); writeCredentials(s);
+          await writeStatus({ stage: 'connected_via_siws', handle: s.handle, wallet: s.keypair.wallet });
+          await tryAbout();
+          return;
+        }
+        await writeStatus({ stage: 'siws_failed', status: r.status, body: r.json, wallet_account: acct });
+      }
+    }
     if (Date.now() > s.expiresAt) {
       // The 15-minute window lapsed: ask again with the same wallet, no new approval needed.
       const start = await api('/api/agents/connect', { walletAddress: s.keypair.wallet, name: 'Arena Agent (Prismwake)' });
