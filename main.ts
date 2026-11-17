@@ -1,26 +1,43 @@
-// Prismwake — make.fun "Make the best game" entrypoint (Node 22, standard library only).
-// The grader runs `node /bot/main.ts` twice with a writable /output; both runs must
-// write byte-identical output. We copy the shipped game/ and screenshots/ beside
-// this file and rebuild dossier.json with the kit's unchanged library.
+// Wispwood — a best-game-01 entry (Node 22, the standard library only).
 //
-// Locally: mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+// The game is this directory's game/ folder: plain static files a desktop browser
+// loads offline (game/index.html and its ES modules, two bundled fonts, no library
+// and no network request). This program hands it in: it copies game/ and
+// screenshots/ from beside this file to /output and writes /output/dossier.json,
+// the summary the judge reads, with the vendored make.fun library
+// (vendor/makefun-game.ts, the kit's copy, unchanged).
+//
+// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
+//   MAKEFUN_OUTPUT_DIR=out node main.ts
+//
+// To play it: `node serve.ts`, then open the address it prints.
+
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
-const gameSrc = join(here, 'game');
-const shotsSrc = join(here, 'screenshots');
 
+// The whole output is rewritten, so a second run into the same directory cannot
+// leave a file of the first one behind and change the dossier's bytes.
 mkdirSync(out, { recursive: true });
-cpSync(gameSrc, join(out, 'game'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(shotsSrc)) cpSync(shotsSrc, join(out, 'screenshots'), { recursive: true });
+rmSync(join(out, 'game'), { recursive: true, force: true });
+rmSync(join(out, 'screenshots'), { recursive: true, force: true });
+rmSync(join(out, 'dossier.json'), { force: true });
 
-// The scorer's own caps (reference/gate.json). Only text_max_bytes shapes the
-// dossier text; the rest make this program refuse output the gate would refuse.
+cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
+mkdirSync(join(out, 'screenshots'), { recursive: true });
+if (existsSync(join(here, 'screenshots'))) {
+  cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+}
+
+// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the
+// bytes; the others refuse an entry the scorer would refuse (more than 4
+// screenshots or one over 256 KiB; more than 993 entries under game/ or 48 MiB of
+// game files in all, or a path under game/ over 1000 bytes: game/ counts beside
+// /output's own 1000-entry cap, its screenshots/ and dossier.json).
 writeFileSync(
   join(out, 'dossier.json'),
   buildDossier(out, {

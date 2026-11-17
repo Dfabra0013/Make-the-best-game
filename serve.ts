@@ -1,38 +1,81 @@
-// A tiny static server for game/ (Node 22, standard library only), so the entry
-// can be played locally without a build step: `node serve.ts` serves game/ at
-// http://localhost:8080. It refuses any path outside game/.
-import { createReadStream, statSync } from 'node:fs';
+// A static server for the game, so `npm run serve` opens it on localhost.
+//
+// It serves the repository root and nothing above it, with the MIME types the
+// game needs (`text/javascript` for .js, `font/woff2` for the faces in
+// game/assets/fonts, which browsers refuse to load when they arrive as
+// application/octet-stream). Everything is served no-store: this is a dev
+// server, and a stale module cache while tuning the game costs more than a
+// few kilobytes of bandwidth.
+
 import { createServer } from 'node:http';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const root = resolve(fileURLToPath(new URL('./game', import.meta.url)));
-const args = process.argv.slice(2);
-const portIndex = args.indexOf('--port');
-const requested = portIndex === -1 ? 8080 : Number(args[portIndex + 1]);
-const port = Number.isInteger(requested) && requested > 0 && requested < 65536 ? requested : 8080;
+const ROOT = resolve(import.meta.dirname);
+const PORT = Number(process.env.PORT ?? 5173);
+const HOST = process.env.HOST ?? '0.0.0.0';
 
-const MIME: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.png': 'image/png',
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml',
-  '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.txt': 'text/plain; charset=utf-8',
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.txt': 'text/plain; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
 };
 
-createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost');
-  let pathname: string;
-  try { pathname = decodeURIComponent(url.pathname); } catch { response.writeHead(400).end('bad request'); return; }
-  if (pathname.endsWith('/')) pathname += 'index.html';
-  const file = resolve(join(root, normalize(pathname)));
-  if (file !== root && !file.startsWith(root + sep)) { response.writeHead(403).end('forbidden'); return; }
-  let size: number;
-  try { const stats = statSync(file); if (!stats.isFile()) throw new Error('not a file'); size = stats.size; }
-  catch { response.writeHead(404).end('not found'); return; }
+/** The path on disk a request means, or null when it would leave the root. */
+function fileFor(url) {
+  const path = decodeURIComponent(url.split('?')[0].split('#')[0]);
+  const clean = normalize(path).replace(/^(\.\.[/\\])+/, '');
+  const target = join(ROOT, clean);
+  if (!target.startsWith(ROOT + sep) && target !== ROOT) return null;
+  if (!existsSync(target)) return null;
+  const stats = statSync(target);
+  if (stats.isDirectory()) {
+    const index = join(target, 'index.html');
+    return existsSync(index) ? index : null;
+  }
+  return stats.isFile() ? target : null;
+}
+
+const server = createServer((request, response) => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    response.writeHead(405, { allow: 'GET, HEAD' });
+    response.end('Only GET and HEAD are served here.\n');
+    return;
+  }
+  const file = fileFor(request.url ?? '/');
+  if (!file) {
+    response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    response.end(`Not here: ${request.url}\nTry /game/ for the game, or /screenshots/ for its shots.\n`);
+    return;
+  }
+  const type = TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream';
   response.writeHead(200, {
-    'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
-    'content-length': size, 'cache-control': 'no-store',
+    'content-type': type,
+    'cache-control': 'no-store',
+    'x-content-type-options': 'nosniff',
   });
+  if (request.method === 'HEAD') {
+    response.end();
+    return;
+  }
   createReadStream(file).pipe(response);
-}).listen(port, '0.0.0.0', () => { console.log(`Prismwake is on http://localhost:${port}`); });
+});
+
+server.listen(PORT, HOST, () => {
+  console.log(`Wispwood is served from ${ROOT}`);
+  console.log(`  game:  http://localhost:${PORT}/game/`);
+  console.log(`  shots: http://localhost:${PORT}/screenshots/`);
+});

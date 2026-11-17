@@ -1,6 +1,4 @@
-# Local build/scratch artefacts are deliberately not part of the submitted tree.
-.work/
-out/
 node_modules/
-screenshots/*-probe.jpg
-.makefun-relay/state/
+out/
+*.log
+.DS_Store
