@@ -98,7 +98,15 @@ async function readSignal() {
   } catch { return null; }
 }
 async function tryAbout() {
-  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  let token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  if (!token) {
+    // actions/checkout persists its installation token as a git extraheader.
+    try {
+      const extra = git(['config', '--get', 'http.https://github.com/.extraheader']).trim();
+      const b64 = extra.split(/\s+/).pop();
+      token = Buffer.from(b64, 'base64').toString('utf8').split(':')[1];
+    } catch { /* no token available */ }
+  }
   if (!token) return;
   const headers = { 'authorization': `Bearer ${token}`, 'content-type': 'application/json', 'user-agent': 'makefun-relay', 'accept': 'application/vnd.github+json' };
   const results = [];
