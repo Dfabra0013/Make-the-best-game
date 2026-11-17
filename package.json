@@ -1,0 +1,16 @@
+{
+  "name": "wispwood",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wispwood: a dusk-lit herding game played in the browser, an entry for make.fun's best-game bounty.",
+  "license": "MIT",
+  "scripts": {
+    "hand-in": "node main.ts",
+    "serve": "node serve.ts",
+    "shots": "node tools/render-shots.mjs"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.62"
+  }
+}
