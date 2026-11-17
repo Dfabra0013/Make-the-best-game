@@ -236,6 +236,7 @@ async function main() {
     return;
   }
   if (signal.stage === 'about') { await tryAbout(); return; }
+  if (signal.stage === 'check') await tryAbout();
 
   const k = ensureKit();
   if (!k.ok) { await writeStatus({ stage: 'kit_error', out: k.out?.slice(0, 500), err: k.err?.slice(0, 500) }); return; }
