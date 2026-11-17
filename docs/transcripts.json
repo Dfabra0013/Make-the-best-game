@@ -1,0 +1,70 @@
+{
+  "schema": "makefun/transcripts/v1",
+  "competition": "best-game-01",
+  "account": "dfabra0013",
+  "entry_title": "Wispwood",
+  "run_record": "docs/transcripts/wispwood-run.md",
+  "summary": "Wispwood: a nocturne herding game. A fox with a lantern gathers wisps across a meadow at dusk and walks them to an arched doorway in the hillside while hounds cue, crouch and lunge. Five dusks, three hearts, charms between dusks. Written DOM-free so the same code plays in the browser and under a headless Skia canvas, which is how the four screenshots were rendered.",
+  "events": [
+    {
+      "step": 1,
+      "kind": "read",
+      "summary": "Read make.fun/skill.md, the best-game-01 requirements (14 chunks) and the bounty page; extracted the gate, the judge and how_to_submit."
+    },
+    {
+      "step": 2,
+      "kind": "probe",
+      "summary": "Probed the sandbox: no make.fun connectivity from the shell, no headless browser; Node 22.22, gh as Dfabra0013, npm and GitHub reachable."
+    },
+    {
+      "step": 3,
+      "kind": "decide",
+      "summary": "Adopted @napi-rs/canvas for screenshots; kept every system and renderer DOM-free so the game could be played headlessly."
+    },
+    {
+      "step": 4,
+      "kind": "build",
+      "summary": "Wrote engine (rng, draw, particles, input, audio), data (five dusks, charm pool), run state, systems (lantern, flock, hound pack, hollow), actors (fox, wisp, hound), renderers (sky, meadow, actors, hud, ui, layout) and scenes (title, play, charm, results)."
+    },
+    {
+      "step": 5,
+      "kind": "build",
+      "summary": "Wrote main.ts (out/ plus dossier), serve.ts (static server), game/index.html, game/style.css and the browser wiring in game/src/main.js."
+    },
+    {
+      "step": 6,
+      "kind": "verify",
+      "summary": "Rendered screenshots, opened them, and corrected the composition: HUD collision with long dusk names, meadow tufts reading as rain, a tombstone-shaped Hollow, a fox lost in its own light."
+    },
+    {
+      "step": 7,
+      "kind": "balance",
+      "summary": "Built tools/autopilot.mjs and tools/trace-dusk.mjs and balanced the five dusks against them; the practice run now reaches the dawn with all five dusks kept."
+    },
+    {
+      "step": 8,
+      "kind": "verify",
+      "summary": "Ran main.ts twice: byte-identical dossier.json (877,677 bytes, sha256 805685218673d2cacf255800e6db288808153e18887191c0e8b897f41104589e); screenshots and game files inside the gate; no external references in game/."
+    },
+    {
+      "step": 9,
+      "kind": "write",
+      "summary": "Wrote the README with the bounty badges, the MIT licence, the transcripts run record and this bundle."
+    }
+  ],
+  "verification": {
+    "practice_run": "5/5 dusks kept, score 24719, hearts 3, 51 wisps home, ending dawn",
+    "dossier_sha256": "805685218673d2cacf255800e6db288808153e18887191c0e8b897f41104589e",
+    "dossier_bytes": 877677,
+    "dossier_text_bytes": 159580,
+    "screenshots": [
+      "screenshots/01-wispwood-play.jpg",
+      "screenshots/02-wispwood-title.jpg",
+      "screenshots/03-wispwood-flare.jpg",
+      "screenshots/04-wispwood-dawn.jpg"
+    ],
+    "game_files": 35,
+    "game_bytes": 319488,
+    "references": "relative only; no http(s) references inside game/"
+  }
+}

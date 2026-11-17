@@ -1,0 +1,62 @@
+/* Wispwood's page: the two faces it is set in (bundled, so the game asks the
+   network for nothing) and the frame the canvas sits in. */
+
+@font-face {
+  font-family: "Wispwood Display";
+  src: url("./assets/fonts/fraunces-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Wispwood Display";
+  src: url("./assets/fonts/fraunces-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Wispwood Text";
+  src: url("./assets/fonts/karla-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Wispwood Text";
+  src: url("./assets/fonts/karla-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: radial-gradient(circle at 50% 38%, #171021 0%, #07050d 72%);
+  color: #fff3e2;
+  font-family: "Wispwood Text", "Trebuchet MS", sans-serif;
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  place-items: center;
+}
+
+/* The game is drawn at 1280x800 and scaled to the window, keeping its shape. */
+#game {
+  display: block;
+  width: min(100vw, 160vh);
+  height: min(62.5vw, 100vh);
+  background: #08060f;
+  border-radius: 4px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 243, 226, 0.07);
+  cursor: crosshair;
+  touch-action: none;
+}
