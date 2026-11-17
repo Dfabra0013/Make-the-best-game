@@ -205,6 +205,10 @@ async function main() {
       return;
     }
     const token = await api('/api/agents/connect/token', { device_code: s.device_code, signature: s.signature });
+    if (!s.lastPollAt || Date.now() - s.lastPollAt > 60000) {
+      s.lastPollAt = Date.now(); saveState(s);
+      await writeStatus({ stage: 'token_poll', status: token.status, error: token.json?.error ?? null, wallet: s.keypair.wallet });
+    }
     if (token.status === 200 && token.json?.key) {
       s.key = token.json.key;
       s.handle = token.json.user?.handle;
