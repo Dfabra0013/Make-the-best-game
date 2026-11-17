@@ -1,0 +1,7 @@
+{
+  "stage": "token_poll",
+  "status": 400,
+  "error": "authorization_pending",
+  "wallet": "65zr6rYdARcKyYerpJDHpjSXhYVnJogcSGVvgfQHqFGd",
+  "at": "2026-11-17T14:54:02.131Z"
+}
