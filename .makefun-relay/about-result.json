@@ -1,0 +1,7 @@
+{
+  "at": "2026-11-17T12:36:56.658Z",
+  "patch_status": 403,
+  "patch_body": "{\n  \"message\": \"Resource not accessible by integration\",\n  \"documentation_url\": \"https://docs.github.com/rest/repos/repos#update-a-repository\",\n  \"status\": \"403\"\n}\n",
+  "topics_status": 403,
+  "topics_body": "{\n  \"message\": \"Resource not accessible by integration\",\n  \"documentation_url\": \"https://docs.github.com/rest/repos/repos#replace-all-repository-topics\",\n  \"status\": \"403\"\n}\n"
+}
